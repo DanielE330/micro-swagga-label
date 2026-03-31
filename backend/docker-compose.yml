@@ -1,29 +1,54 @@
 version: "3.9"
 
 services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "8080:8080"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - auth_service
+      - user_service
+      - docs_service
+  
+  docs_service:
+    build: ./docs_service
+    expose:
+      - "8000"  # Порт для документации
+    environment:
+      - SERVICES=Auth Service=/auth,User Service=/users
+
   auth_service:
     build: ./auth_service
-    ports:
-      - "8000:8000"
+    expose:
+      - "8002"  # Внутренний порт (не публикуем на хост)
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/auth_db
-    env_file:
-      - .env
-    depends_on:
-      db:
-        condition: service_healthy
-  user_service:
-    build: ./user_service
-    ports:
-      - "8001:8001"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/user_db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_db
+      - SERVICE_NAME=auth_service
     env_file:
       - .env
     depends_on:
       db:
         condition: service_healthy
 
+  user_service:
+    build: ./user_service
+    expose:
+      - "8001"  # Внутренний порт
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_db
+      - SERVICE_NAME=user_service
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  
   db:
     image: postgres:15
     restart: always
@@ -42,4 +67,5 @@ services:
 
 volumes:
   postgres_data:
-
+  caddy_data:
+  caddy_config:

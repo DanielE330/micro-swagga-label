@@ -1,5 +1,7 @@
+import os
 from datetime import datetime, timedelta
-from jose import jwt
+from jose import jwt, JWTError
+from fastapi import HTTPException
 from passlib.context import CryptContext
 
 def verify_token(token: str) -> str:

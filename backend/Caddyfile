@@ -1,0 +1,22 @@
+:8080 {
+    # Индекс документации
+    handle_path /docs {
+        reverse_proxy docs_service:8000
+    }
+
+    # Маршрутизация на основе пути
+    route /auth/* {
+        uri strip_prefix /auth
+        reverse_proxy auth_service:8002
+    }
+    
+    route /users/* {
+        uri strip_prefix /users
+        reverse_proxy user_service:8001
+    }
+    
+    # Health check эндпоинты
+    handle /health {
+        respond "ok" 200
+    }
+}

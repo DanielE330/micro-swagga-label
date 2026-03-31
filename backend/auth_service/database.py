@@ -14,7 +14,10 @@ _conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
 _cur = _conn.cursor()
 _cur.execute("SELECT 1 FROM pg_database WHERE datname = %s", (_db_name,))
 if not _cur.fetchone():
-    _cur.execute(f'CREATE DATABASE "{_db_name}"')
+    try:
+        _cur.execute(f'CREATE DATABASE "{_db_name}"')
+    except psycopg2.errors.DuplicateDatabase:
+        pass
 _cur.close()
 _conn.close()
 
